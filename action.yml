@@ -3,4 +3,4 @@ description: "Github action that adds a label when a branch is merged to staging
 
 runs:
   using: "node12"
-  main: "index.js"
+  main: "dist/index.js"

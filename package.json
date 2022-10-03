@@ -2,8 +2,9 @@
   "name": "staging-label-action",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "build": "ncc build src/action.js -o dist",
     "test": "echo \"Error: no test specified\" && exit 1",
     "bump": "npm version"
   },
@@ -17,5 +18,10 @@
   "bugs": {
     "url": "https://github.com/planningcenter/staging-label-action/issues"
   },
-  "homepage": "https://github.com/planningcenter/staging-label-action#readme"
+  "homepage": "https://github.com/planningcenter/staging-label-action#readme",
+  "devDependencies": {
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^5.1.1",
+    "@zeit/ncc": "^0.22.3"
+  }
 }
