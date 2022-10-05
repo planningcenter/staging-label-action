@@ -15,7 +15,23 @@ async function run() {
       ...context.repo,
       commit_sha,
     });
-    const { data: pulls } = await octokit.rest.pulls.list({ ...context.repo })
+    const { data: pulls } = await octokit.rest.pulls.list({ ...context.repo });
+
+    const filteredBranches = branches.filter(branch => branch.name !== "main");
+    if (filteredBranches.find(branch => branch.name === "staging")) {
+      
+    } else {
+      let pullsWithLabels = [];
+
+      filteredBranches.forEach(branch => {
+        const pull = pulls.find(p => p.head.ref === branch.name && p.labels.length > 0);
+        if (pull) { pullsWithLabels = [...pullsWithLabels, pull] }
+      });
+      
+      Promise.all(
+        pullsWithLabels.map(p => octokit.rest.issues.removeLabel({...context.repo, issue_number: p.number, name: 'staging'}))
+      );
+    }
 
   } catch(error) {
     core.setFailed(error.message);
