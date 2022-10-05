@@ -13451,9 +13451,26 @@ async function run() {
     });
     const { data: pulls } = await octokit.rest.pulls.list({ ...context.repo });
 
+    // remove main from the branches
     const filteredBranches = branches.filter(branch => branch.name !== "main");
+
     if (filteredBranches.find(branch => branch.name === "staging")) {
-      
+      const commits = payload.commits.filter(commit => commit.tree_id === payload.head_commit.tree_id)
+      let existingPulls = [];
+      commits.forEach(c => {
+        const commit = pulls.find(p => p.head.sha === c.id);
+        if (commit) { 
+          existingPulls = [...existingPulls, commit]
+        }
+      });
+
+      Promise.all(
+        existingPulls.map(p => octokit.rest.issues.addLabels({
+          ...context.repo,
+          issue_number: p.number,
+          labels: ['staging']
+        }))
+      );     
     } else {
       let pullsWithLabels = [];
 
@@ -13461,7 +13478,7 @@ async function run() {
         const pull = pulls.find(p => p.head.ref === branch.name && p.labels.length > 0);
         if (pull) { pullsWithLabels = [...pullsWithLabels, pull] }
       });
-      
+
       Promise.all(
         pullsWithLabels.map(p => octokit.rest.issues.removeLabel({...context.repo, issue_number: p.number, name: 'staging'}))
       );
