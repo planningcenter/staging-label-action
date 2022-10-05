@@ -24,3 +24,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: planningcenter/staging-label-action@v0.1.1
 ```
+
+The action can be a bit slow, but you may be able to speed it up by using [setup-node](https://github.com/actions/setup-node). Add this to your workflow:
+
+```
+steps:
+  - uses: actions/checkout@v3
+  - uses: actions/setup-node@v3
+    with:
+      node-version: '12'
+      cache: 'npm'
+  - name: Staging label
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: planningcenter/staging-label-action@v0.1.1
+```
