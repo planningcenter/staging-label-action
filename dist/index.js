@@ -13583,7 +13583,6 @@ const { Octokit } = __nccwpck_require__(1231);
 async function run() {
   try {
     const octokit = new Octokit();
-
     const context = github.context
     const payload = context.payload
 
