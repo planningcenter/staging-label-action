@@ -25,7 +25,7 @@ jobs:
         uses: planningcenter/staging-label-action@v0.1.1
 ```
 
-The action can be a bit slow, but you may be able to speed it up by using [setup-node](https://github.com/actions/setup-node). Add this to your workflow:
+If you find that this action can be a bit slow, you may be able to speed it up by using [setup-node](https://github.com/actions/setup-node). Add this to your workflow:
 
 ```
 steps:
@@ -39,3 +39,7 @@ steps:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     uses: planningcenter/staging-label-action@v0.1.1
 ```
+
+## Copyright & License
+
+Copyright (c) Planning Center, licensed MIT. See LICENSE file in this repo.
