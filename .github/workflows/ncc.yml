@@ -2,7 +2,7 @@ name: ncc
 on:
   push:
     paths:
-      - 'package-lock.json'
+      - 'yarn.lock'
       - 'src/**'
 
 jobs:
