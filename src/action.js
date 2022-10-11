@@ -5,11 +5,10 @@ const { Octokit } = require("@octokit/action");
 async function run() {
   try {
     const octokit = new Octokit();
-    const context = github.context
-    const payload = context.payload
+    const context = github.context;
 
     // Get all branches for head_commit in payload
-    const commit_sha = payload.head_commit.id
+    const commit_sha = github.context.payload.head_commit.id
     const { data: branches } = await octokit.rest.repos.listBranchesForHeadCommit({
       ...context.repo,
       commit_sha,
@@ -20,7 +19,7 @@ async function run() {
     const filteredBranches = branches.filter(branch => branch.name !== "main");
 
     if (filteredBranches.find(branch => branch.name === "staging")) {
-      const commits = payload.commits.filter(commit => commit.tree_id === payload.head_commit.tree_id)
+      const commits = github.context.payload.commits.filter(commit => commit.tree_id === github.context.payload.head_commit.tree_id)
       let existingPulls = [];
       commits.forEach(c => {
         const commit = pulls.find(p => p.head.sha === c.id);
