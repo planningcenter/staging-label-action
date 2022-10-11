@@ -2,5 +2,5 @@ name: "Staging Label Action"
 description: "Github action that adds a label when a branch is merged to staging"
 
 runs:
-  using: "node12"
+  using: "node14"
   main: "dist/index.js"
