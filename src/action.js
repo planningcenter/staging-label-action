@@ -38,7 +38,6 @@ async function run() {
       );     
     } else {
       let pullsWithLabels = [];
-
       filteredBranches.forEach(branch => {
         const pull = pulls.find(p => p.head.ref === branch.name && p.labels.length > 0);
         if (pull) { pullsWithLabels = [...pullsWithLabels, pull] }
