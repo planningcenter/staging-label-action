@@ -14,6 +14,6 @@ jobs:
         with:
           node-version: 14
       - run: npm ci
-      - uses: planningcenter/balto-utils/ncc@v1
+      - uses: planningcenter/balto-utils/ncc@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
