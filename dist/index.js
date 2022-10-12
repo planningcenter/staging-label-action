@@ -13662,8 +13662,17 @@ async function run() {
     if (filteredBranches.find(branch => branch.name === "staging")) {
       const commits = github.context.payload.commits.filter(commit => commit.tree_id === github.context.payload.head_commit.tree_id)
       let existingPulls = [];
+      
       commits.forEach(c => {
-        const commit = pulls.find(p => p.head.sha === c.id);
+        let commit = pulls.find(p => p.head.sha === c.id);
+        if (commit) { 
+          existingPulls = [...existingPulls, commit]
+        }
+      });
+
+      github.context.payload.commits.forEach(c => {
+        let commit = pulls.find(p => p.head.sha === c.id);
+      
         if (commit) { 
           existingPulls = [...existingPulls, commit]
         }
