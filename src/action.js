@@ -48,9 +48,10 @@ async function run() {
       let pullsWithLabels = [];
       filteredBranches.forEach(branch => {
         const pull = pulls.find(p => p.head.ref === branch.name && p.labels.length > 0);
-        if (pull) { pullsWithLabels = [...pullsWithLabels, pull] }
+        const hasStagingLabel = pull && pull.labels.find(label => label.name === 'staging');
+        if (hasStagingLabel) { pullsWithLabels = [...pullsWithLabels, pull] }
       });
-
+      
       Promise.all(
         pullsWithLabels.map(p => octokit.rest.issues.removeLabel({...context.repo, issue_number: p.number, name: 'staging'}))
       );
