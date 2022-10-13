@@ -46,13 +46,15 @@ async function run() {
       );     
     } else {
       let pullsWithLabels = [];
+      let stagingLabel;
       filteredBranches.forEach(branch => {
         const pull = pulls.find(p => p.head.ref === branch.name && p.labels.length > 0);
-        if (pull) { pullsWithLabels = [...pullsWithLabels, pull] }
+        stagingLabel = pull && pull.labels.find(label => label.name.toLocaleLowerCase() === 'staging');
+        if (stagingLabel) { pullsWithLabels = [...pullsWithLabels, pull] }
       });
-
+      
       Promise.all(
-        pullsWithLabels.map(p => octokit.rest.issues.removeLabel({...context.repo, issue_number: p.number, name: 'staging'}))
+        pullsWithLabels.map(p => octokit.rest.issues.removeLabel({...context.repo, issue_number: p.number, name: stagingLabel.name }))
       );
     }
 
