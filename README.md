@@ -12,6 +12,10 @@ name: Staging Label
 
 # This action needs to run on push
 on: [push]
+permissions:
+    contents: read
+    issues: read
+    pull-requests: write
 
 jobs:
   build:
