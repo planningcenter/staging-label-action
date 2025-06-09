@@ -1,5 +1,5 @@
 name: "Staging Label Action"
-description: "Github action that adds a label when a branch is merged to staging"
+description: "Github action that adds a label when a branch is merged to staging and merges to staging when adding the deploy-staging label"
 
 runs:
   using: "node20"
