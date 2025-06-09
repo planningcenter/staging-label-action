@@ -60,25 +60,11 @@ async function addStagingLabelBranchOnStaging(octokit, context) {
 
     await Promise.all(
       existingPulls.map(async p => {
-        await octokit.rest.issues.addLabels({
-          ...context.repo,
-          issue_number: p.number,
-          labels: [STAGING]
-        });
+        await addStagingLabel(octokit, context, p.number);
 
-        // Remove deploy-staging label if it exists
         const hasDeployLabel = p.labels.some(label => label.name === DEPLOY_STAGING);
         if (hasDeployLabel) {
-          try {
-            await octokit.rest.issues.removeLabel({
-              ...context.repo,
-              issue_number: p.number,
-              name: DEPLOY_STAGING
-            });
-          } catch (error) {
-            // Label might not exist, ignore the error
-            core.warning(`Could not remove ${DEPLOY_STAGING} label from PR #${p.number}: ${error.message}`);
-          }
+          await removeLabel(DEPLOY_STAGING, octokit, context, p.number);
         }
       })
     );
@@ -93,7 +79,7 @@ async function addStagingLabelBranchOnStaging(octokit, context) {
     });
 
     Promise.all(
-      pullsWithLabels.map(p => octokit.rest.issues.removeLabel({...context.repo, issue_number: p.number, name: stagingLabel.name }))
+      pullsWithLabels.map(p => removeLabel(stagingLabel.name, octokit, context, p.number))
     );
   }
 }
@@ -139,18 +125,39 @@ async function mergeBranchToStaging(octokit, context) {
       body: `❌ Failed to merge \`${headBranch}\` into \`${STAGING}\`.\n\n**Error:** ${error.message}`
     });
 
-    // Remove deploy-staging label on failure
-    try {
-      await octokit.rest.issues.removeLabel({
-        ...context.repo,
-        issue_number: prNumber,
-        name: DEPLOY_STAGING
-      });
-    } catch (removeError) {
-      core.warning(`Could not remove ${DEPLOY_STAGING} label: ${removeError.message}`);
-    }
-
     throw error;
+  }
+
+  // Remove the deploy-staging label from the PR regardless of merge outcome
+  await removeLabel(DEPLOY_STAGING, octokit, context, prNumber);
+}
+
+async function addStagingLabel(octokit, context, issueNumber) {
+  core.info(`Adding ${STAGING} label to PR #${issueNumber}`);
+
+  try {
+    await octokit.rest.issues.addLabels({
+      ...context.repo,
+      issue_number: issueNumber,
+      labels: [STAGING]
+    });
+  } catch (error) {
+    core.warning(`Could not add label ${STAGING}: ${error.message}`);
+  }
+}
+
+async function removeLabel(label, octokit, context, issueNumber) {
+  core.info(`Removing ${label} label from PR #${issueNumber}`);
+
+  try {
+    await octokit.rest.issues.removeLabel({
+      ...context.repo,
+      issue_number: issueNumber,
+      name: label
+    });
+  } catch (error) {
+    // Label might not exist, ignore the error
+    core.warning(`Could not remove label ${label}: ${error.message}`);
   }
 }
 
