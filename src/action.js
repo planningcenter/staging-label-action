@@ -107,13 +107,7 @@ async function mergeBranchToStaging(octokit, context) {
     }
 
     core.info(`Successfully merged ${headBranch} into ${STAGING}`);
-
-    // Add success comment
-    await octokit.rest.issues.createComment({
-      ...context.repo,
-      issue_number: prNumber,
-      body: `✅ Successfully merged \`${headBranch}\` into \`${STAGING}\`. Check in Slugger or your app's deploy Slack channel for deploy details `
-    });
+    await addStagingLabel(octokit, context, prNumber);
 
   } catch (error) {
     core.error(`Failed to merge ${headBranch} into ${STAGING}: ${error.message}`);
