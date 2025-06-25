@@ -89,41 +89,38 @@ async function mergeBranchToStaging(octokit, context) {
   const prNumber = context.payload.pull_request.number;
   const headBranch = context.payload.pull_request.head.ref;
   const headSha = context.payload.pull_request.head.sha;
+  const ALREADY_MERGED = 204;
+  const MERGE_CONFLICT = 409;
 
   try {
-    // Merge the PR branch into staging
     core.info(`Attempting to merge ${headBranch} into staging`);
 
-    const mergeResult = await octokit.rest.repos.merge({
+    await octokit.rest.repos.merge({
       ...context.repo,
       base: STAGING,
       head: headSha,
       commit_message: `Merge ${headBranch} into ${STAGING} via ${DEPLOY_STAGING} label`
     });
 
-    if (mergeResult.status !== 201) {
-      // Response code mappings: https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#merge-a-branch
-      throw new Error(`Unexpected response status: ${mergeResult.status}`)
-    }
-
     core.info(`Successfully merged ${headBranch} into ${STAGING}`);
     await addStagingLabel(octokit, context, prNumber);
-
   } catch (error) {
-    core.error(`Failed to merge ${headBranch} into ${STAGING}: ${error.message}`);
-
-    // Add error comment to PR
-    await octokit.rest.issues.createComment({
-      ...context.repo,
-      issue_number: prNumber,
-      body: `❌ Failed to merge \`${headBranch}\` into \`${STAGING}\`.\n\n**Error:** ${error.message}`
-    });
-
-    throw error;
+    switch (error.status) {
+      case ALREADY_MERGED:
+        core.warning(`${headBranch} is already merged to ${STAGING}. No action taken.`);
+        break;
+      case MERGE_CONFLICT:
+        core.warning(`Merge conflict when merging ${headBranch} into ${STAGING}.`);
+        await addComment(octokit, context, prNumber, `⚠️ Merge conflicts with \`${STAGING}\`. Please merge the branch manually to resolve the conflicts.`);
+        break;
+      default:
+        core.error(`Error attempting to merge \`${headBranch}\` into \`${STAGING}\`: ${error.message}`);
+        await addComment(octokit, context, prNumber, `❌ Failed to merge branch to \`${STAGING}\`.\n\n**Error:** ${error.message}`);
+        throw new Error(`Unexpected merge branch response status: ${error.status}`);
+    }
+  } finally {
+    await removeLabel(DEPLOY_STAGING, octokit, context, prNumber); // Remove regardless of merge outcome
   }
-
-  // Remove the deploy-staging label from the PR regardless of merge outcome
-  await removeLabel(DEPLOY_STAGING, octokit, context, prNumber);
 }
 
 async function addStagingLabel(octokit, context, issueNumber) {
@@ -136,7 +133,7 @@ async function addStagingLabel(octokit, context, issueNumber) {
       labels: [STAGING]
     });
   } catch (error) {
-    core.warning(`Could not add label ${STAGING}: ${error.message}`);
+    core.error(`Could not add label ${STAGING}: ${error.message}`);
   }
 }
 
@@ -151,7 +148,19 @@ async function removeLabel(label, octokit, context, issueNumber) {
     });
   } catch (error) {
     // Label might not exist, ignore the error
-    core.warning(`Could not remove label ${label}: ${error.message}`);
+    core.error(`Could not remove label ${label}: ${error.message}`);
+  }
+}
+
+async function addComment(octokit, context, issueNumber, message) {
+  try {
+    await octokit.rest.issues.createComment({
+      ...context.repo,
+      issue_number: issueNumber,
+      body: message
+    });
+  } catch (error) {
+    core.error(`Could not add comment \`${message}\`: ${error.message}`);
   }
 }
 
